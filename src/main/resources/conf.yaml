@@ -1,0 +1,78 @@
+mysqlSourceInList:
+  - sqlName: mysql_01
+    address: 127.0.0.1
+    port: 3306
+    username: root
+    password: 162331
+nebulaSink:
+  tagList:
+    - tagName: person_simple
+      graphSpace: flinkSink
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: person
+      idIndex: 0
+      fieldList:
+        - name: "name"
+          sqlCol: "name"
+          position: 1
+        - name: "age"
+          sqlCol: "age"
+          position: 2
+  edgeList:
+    - edgeName: friend
+      graphSpace: flinkSink
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: friend
+      srcIndex: 0
+      dstIndex: 1
+      rankIndex: 4
+      fieldList:
+        - name: "col1"
+          sqlCol: "name"
+          position: 2
+        - name: "col2"
+          sqlCol: "alias"
+          position: 3
+        - name: "col3"
+          sqlCol: "otheralias"
+          position: 4
+        - name: "col4"
+          sqlCol: "ranks"
+          position: 5
+        - name: "col5"
+          sqlCol: "oneId"
+          position: 6
+        - name: "col6"
+          sqlCol: "twoId"
+          position: 7
+        - name: "col7"
+          sqlCol: "twoId"
+          position: 8
+        - name: "col8"
+          sqlCol: "twoId"
+          position: 9
+        - name: "col9"
+          sqlCol: "twoId"
+          position: 10
+        - name: "col10"
+          sqlCol: "twoId"
+          position: 11
+        - name: "col11"
+          sqlCol: "twoId"
+          position: 12
+        - name: "col12"
+          sqlCol: "twoId"
+          position: 13
+        - name: "col13"
+          sqlCol: "twoId"
+          position: 14
+        - name: "col14"
+          sqlCol: "twoId"
+          position: 15
+

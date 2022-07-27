@@ -1,9 +1,3 @@
-import com.google.gson.Gson;
-import com.google.gson.internal.LinkedTreeMap;
-import com.ververica.cdc.connectors.mysql.MySqlSource;
-import com.ververica.cdc.connectors.mysql.table.StartupOptions;
-import com.ververica.cdc.debezium.DebeziumSourceFunction;
-import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
 import org.apache.flink.connector.nebula.sink.NebulaBatchOutputFormat;
@@ -11,19 +5,25 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
-import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.types.Row;
+import com.google.gson.Gson;
+import com.google.gson.internal.LinkedTreeMap;
+import com.ververica.cdc.connectors.mysql.MySqlSource;
+import com.ververica.cdc.connectors.mysql.table.StartupOptions;
+import com.ververica.cdc.debezium.DebeziumSourceFunction;
+import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
+import org.apache.flink.streaming.api.datastream.DataStream;
 
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class Runnerv1 {
-    public static void main(String[] args) throws Exception {
+public class edgeTest {
+    public static void main(String[] args) {
+
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
-
         DebeziumSourceFunction<String> sourceFunction = MySqlSource.<String>builder()
                 .hostname("127.0.0.1")
                 .port(3306)
@@ -89,7 +89,11 @@ public class Runnerv1 {
         rowInsertDataStream.addSink(getNebulaInsertOptions(graphConnectionProvider,metaConnectionProvider));
         rowUpdateDataStream.addSink(getNebulaUpdateOptions(graphConnectionProvider,metaConnectionProvider));
         rowDeleteDataStream.addSink(getNebulaDeleteOptions(graphConnectionProvider,metaConnectionProvider));
-        env.execute("mysql_nebula_sync");
+        try {
+            env.execute("mysql_nebula_sync");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
@@ -97,7 +101,7 @@ public class Runnerv1 {
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
-                .setTag("person")
+                .setTag("person_simple")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 2))
@@ -118,7 +122,7 @@ public class Runnerv1 {
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
-                .setTag("person")
+                .setTag("person_simple")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 2))
@@ -139,7 +143,7 @@ public class Runnerv1 {
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
-                .setTag("person")
+                .setTag("person_simple")
                 .setIdIndex(0)
                 .setFields(Arrays.asList("name", "age"))
                 .setPositions(Arrays.asList(1, 2))

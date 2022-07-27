@@ -38,6 +38,7 @@ public class MyJsonDebeziumDeserializationSchema implements DebeziumDeserializat
              3，只存在 afterStruct数据 就是insert数据
         */
 
+
         if (after != null) {
             //insert
             Schema schema = after.schema();

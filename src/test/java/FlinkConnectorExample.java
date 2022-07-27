@@ -30,18 +30,19 @@ import org.slf4j.LoggerFactory;
 /**
  * make sure your nebula graph has create Space, space schema:
  *
- * <p>"CREATE SPACE `flinkSink` (partition_num = 100, replica_factor = 3, charset = utf8,
- * collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
+ * <p>"CREATE SPACE `flinkSink` (partition_num = 100, replica_factor = 3, charset = utf8, collate = utf8_bin, vid_type = INT64, atomic_edge = false) ON default"
  *
  * <p>"USE `flinkSink`"
  *
  * <p>"CREATE TAG IF NOT EXISTS person(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
  * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
  * col12 float, col13 time, col14 geography);"
+ *CREATE TAG IF NOT EXISTS person(col1 string, col2 fixed_string(8), col3 int8, col4 int16, col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double, col12 float, col13 time, col14 geography);
  *
  * <p>"CREATE EDGE IF NOT EXISTS friend(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
  * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
  * col12 float, col13 time, col14 geography);"
+ * CREATE EDGE IF NOT EXISTS friend(col1 string, col2 fixed_string(8), col3 int8, col4 int16, col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double, col12 float, col13 time, col14 geography);
  */
 public class FlinkConnectorExample {
     private static final Logger LOG = LoggerFactory.getLogger(FlinkConnectorExample.class);
@@ -54,9 +55,9 @@ public class FlinkConnectorExample {
             sinkVertexData(env, playerSource);
 //            updateVertexData(env, playerSource);
 //            deleteVertexData(env, playerSource);
-//
-//            DataStream<List<String>> friendSource = constructEdgeSourceData(env);
-//            sinkEdgeData(env, friendSource);
+
+            DataStream<List<String>> friendSource = constructEdgeSourceData(env);
+            sinkEdgeData(env, friendSource);
 //            updateEdgeData(env, friendSource);
 //            deleteEdgeData(env, friendSource);
         } catch (Exception e) {
@@ -73,43 +74,46 @@ public class FlinkConnectorExample {
         List<String> fields1 = Arrays.asList("61", "aba", "abcdefgh", "1", "1111", "22222",
                 "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
                 "11:12:12", "POINT(1 3)");
+//        List<String> fields1 = Arrays.asList("61", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "POINT(1 3)");
         List<String> fields2 = Arrays.asList("62", "aba", "abcdefgh", "1", "1111", "22222",
                 "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
                 "11:12:12", "POINT(1 3)");
-        List<String> fields3 = Arrays.asList("63", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
-                "11:12:12", "POINT(1 3)");
-        List<String> fields4 = Arrays.asList("64", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
-                "11:12:12", "LINESTRING(1 3,2 4)");
-        List<String> fields5 = Arrays.asList("65", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
-                "11:12:12", "LINESTRING(1 3,2 4)");
-        List<String> fields6 = Arrays.asList("66", "aba", "abcdefgh", "1", "1111", "22222",
-                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
-                "11:12:12", "LINESTRING(1 3,2 4)");
-        List<String> fields7 = Arrays.asList("67", "李四", "abcdefgh", "1", "1111", "22222",
-                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0",
-                "11:12:12", "polygon((0 1,1 2,2 3,0 1))");
-        List<String> fields8 = Arrays.asList("68", "aba", "张三", "1", "1111", "22222", "6412233",
-                "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0", "11:12:12",
-                "POLYGON((0 1,1 2,2 3,0 1))");
+//        List<String> fields3 = Arrays.asList("63", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "POINT(1 3)");
+//        List<String> fields4 = Arrays.asList("64", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "LINESTRING(1 3,2 4)");
+//        List<String> fields5 = Arrays.asList("65", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "LINESTRING(1 3,2 4)");
+//        List<String> fields6 = Arrays.asList("66", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "LINESTRING(1 3,2 4)");
+//        List<String> fields7 = Arrays.asList("67", "李四", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0",
+//                "11:12:12", "polygon((0 1,1 2,2 3,0 1))");
+//        List<String> fields8 = Arrays.asList("68", "aba", "张三", "1", "1111", "22222", "6412233",
+//                "2019-01-01", "2019-01-01T12:12:12", "435463424", "true", "1.2", "1.0", "11:12:12",
+//                "POLYGON((0 1,1 2,2 3,0 1))");
         player.add(fields1);
-        player.add(fields2);
-        player.add(fields3);
-        player.add(fields4);
-        player.add(fields5);
-        player.add(fields6);
-        player.add(fields7);
-        player.add(fields8);
-//        DataStream<List<String>> playerSource = env.fromCollection(player);
-        List<List<String>> player_simple = new ArrayList<>();
-        List<String> field1 = Arrays.asList("21", "abas", "13");
-        List<String> field2 = Arrays.asList("32", "abda", "12");
-        player_simple.add(field1);
-        player_simple.add(field2);
-        DataStream<List<String>> playerSource = env.fromCollection(player_simple);
-        System.out.println(player_simple);
+//        player.add(fields2);
+//        player.add(fields3);
+//        player.add(fields4);
+//        player.add(fields5);
+//        player.add(fields6);
+//        player.add(fields7);
+//        player.add(fields8);
+        DataStream<List<String>> playerSource = env.fromCollection(player);
+//        List<List<String>> player_simple = new ArrayList<>();
+//        List<String> field1 = Arrays.asList("21", "abas", "13");
+//        List<String> field2 = Arrays.asList("32", "abda", "12");
+//        player_simple.add(field1);
+//        player_simple.add(field2);
+//        DataStream<List<String>> playerSource = env.fromCollection(player_simple);
+//        System.out.println(player_simple);
         return playerSource;
     }
 
@@ -157,13 +161,14 @@ public class FlinkConnectorExample {
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
-        List<String> cols = Arrays.asList("name", "age");
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
                 .setTag("person")
                 .setIdIndex(0)
-                .setFields(cols)
-                .setPositions(Arrays.asList(1, 2))
+                .setFields(Arrays.asList("col1", "col2", "col3", "col4", "col5", "col6", "col7",
+                        "col8",
+                        "col9", "col10", "col11", "col12", "col13", "col14"))
+                .setPositions(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14))
                 .setBatch(2)
                 .builder();
 
@@ -280,13 +285,20 @@ public class FlinkConnectorExample {
 
     /**
      * construct flink data source
+     *  * <p>"CREATE EDGE IF NOT EXISTS friend(col1 string, col2 fixed_string(8), col3 int8, col4 int16,
+     *  * col5 int32, col6 int64, col7 date, col8 datetime, col9 timestamp, col10 bool, col11 double,
+     *  * col12 float, col13 time, col14 geography);"
      */
+
     public static DataStream<List<String>> constructEdgeSourceData(StreamExecutionEnvironment env) {
         List<List<String>> friend = new ArrayList<>();
         List<String> fields1 = Arrays.asList("61", "62", "aba", "abcdefgh", "1", "1111", "22222",
                 "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
                 "11:12:12", "POINT(1 3)");
-        List<String> fields2 = Arrays.asList("62", "63", "aba", "abcdefgh", "1", "1111", "22222",
+//        List<String> fields1 = Arrays.asList("61", "62", "aba", "abcdefgh", "1", "1111", "22222",
+//                "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
+//                "11:12:12", "POINT(1 3)");
+        List<String> fields2 = Arrays.asList("61", "63", "aba", "abcdefgh", "1", "1111", "22222",
                 "6412233", "2019-01-01", "2019-01-01T12:12:12", "435463424", "false", "1.2", "1.0",
                 "11:12:12", "POINT(1 3)");
         List<String> fields3 = Arrays.asList("63", "64", "aba", "abcdefgh", "1", "1111", "22222",
@@ -310,12 +322,12 @@ public class FlinkConnectorExample {
                 "POLYGON((0 1,1 2,2 3,0 1))");
         friend.add(fields1);
         friend.add(fields2);
-        friend.add(fields3);
-        friend.add(fields4);
-        friend.add(fields5);
-        friend.add(fields6);
-        friend.add(fields7);
-        friend.add(fields8);
+//        friend.add(fields3);
+//        friend.add(fields4);
+//        friend.add(fields5);
+//        friend.add(fields6);
+//        friend.add(fields7);
+//        friend.add(fields8);
         DataStream<List<String>> playerSource = env.fromCollection(friend);
         System.out.println(playerSource);
         return playerSource;
@@ -355,6 +367,7 @@ public class FlinkConnectorExample {
             }
             return record;
         });
+        dataStream.print();
         dataStream.addSink(nebulaSinkFunction);
         try {
             env.execute("Write Nebula");

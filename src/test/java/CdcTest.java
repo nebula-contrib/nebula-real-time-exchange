@@ -3,7 +3,6 @@ import com.google.gson.internal.LinkedTreeMap;
 import com.ververica.cdc.connectors.mysql.MySqlSource;
 import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import com.ververica.cdc.debezium.DebeziumSourceFunction;
-import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
@@ -13,17 +12,12 @@ import org.apache.flink.connector.nebula.statement.ExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
-import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.types.Row;
-import org.apache.flink.util.Collector;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Logger;
 
 public class CdcTest {
 
@@ -33,76 +27,61 @@ public class CdcTest {
         env.setParallelism(1);
 
         //2、连接mysql数据源
-        DebeziumSourceFunction<Map> sourceFunction = MySqlSource.<Map>builder()
+        DebeziumSourceFunction<String> sourceFunction = MySqlSource.<String>builder()
                 .hostname("127.0.0.1")
                 .port(3306)
                 .username("root")
                 .password("162331")
                 .databaseList("test")
-                .tableList("test.person")
+                .tableList("test.person,test.friend")
                 .startupOptions(StartupOptions.initial())
                 .deserializer(new MyJsonDebeziumDeserializationSchema())
                 .build();
 
         //3、添加到env
-        DataStreamSource<Map> rowDataStreamSource = env.addSource(sourceFunction);
-        SingleOutputStreamOperator<Map> streamInsertOperator = rowDataStreamSource.filter(row -> {
-            System.out.println(row.getClass().getName());
-                    return (row.get("type").equals("insert") | row.get("type").equals("insert"));
-                }
-        );
-        SingleOutputStreamOperator<Map> streamUpdateOperator = rowDataStreamSource.filter(row ->
-                (row.get("type").equals("update")));
-        SingleOutputStreamOperator<Map> streamDeleteOperator = rowDataStreamSource.filter(row ->
-                (row.get("type").equals("delete")));
-        DataStream<Row> rowInsertDataStream = streamInsertOperator.map(row -> {
-            LinkedTreeMap data = (LinkedTreeMap) row.get("data");
+        DataStream<String> rowInsertFilter = env.addSource(sourceFunction).filter(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            return (map.get("type").equals("insert") | map.get("type").equals("read"));
+        });
+        DataStream<Row> rowInsertDataStream = rowInsertFilter.map(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            LinkedTreeMap data = (LinkedTreeMap) map.get("data");
+            System.out.println(data.size());
             Row record = new Row(data.size());
             record.setField(0, data.get("id"));
             record.setField(1, data.get("name"));
             record.setField(2, data.get("age"));
             return record;
-
         });
-        DataStream<Row> rowUpdateDataStream = streamUpdateOperator.map(row -> {
-            LinkedTreeMap data = (LinkedTreeMap) row.get("data");
+        rowInsertDataStream.print();
+
+        DataStream<String> rowUpdateFilter = env.addSource(sourceFunction).filter(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            return (map.get("type").equals("update"));
+        });
+        DataStream<Row> rowUpdateDataStream = rowUpdateFilter.map(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            LinkedTreeMap data = (LinkedTreeMap) map.get("data");
             Row record = new Row(data.size());
             record.setField(0, data.get("id"));
             record.setField(1, data.get("name"));
             record.setField(2, data.get("age"));
             return record;
-
         });
-        DataStream<Row> rowDeleteDataStream = streamDeleteOperator.map(row -> {
-            LinkedTreeMap data = (LinkedTreeMap) row.get("data");
 
+        DataStream<String> rowDeleteFilter = env.addSource(sourceFunction).filter(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            return (map.get("type").equals("delete"));
+        });
+        DataStream<Row> rowDeleteDataStream = rowDeleteFilter.map(row -> {
+            HashMap map = new Gson().fromJson(row, HashMap.class);
+            LinkedTreeMap data = (LinkedTreeMap) map.get("data");
             Row record = new Row(data.size());
             record.setField(0, data.get("id"));
             record.setField(1, data.get("name"));
             record.setField(2, data.get("age"));
             return record;
-
         });
-
-
-        //输出
-        rowInsertDataStream.addSink(getNebulaInsertOptions());
-        rowUpdateDataStream.addSink(getNebulaUpdateOptions());
-        rowDeleteDataStream.addSink(getNebulaDeleteOptions());
-
-
-
-//        env.setRestartStrategy(
-//                RestartStrategies.fixedDelayRestart(
-//                        3, // 尝试重启的次数
-//                        Time.of(10, TimeUnit.SECONDS) // 间隔
-//                ));
-
-
-        env.execute("mysql_nebula_sync");
-    }
-
-    private static SinkFunction<Row> getNebulaDeleteOptions() {
         NebulaClientOptions nebulaClientOptions =
                 new NebulaClientOptions.NebulaClientOptionsBuilder()
                         .setGraphAddress("127.0.0.1:9669")
@@ -112,6 +91,14 @@ public class CdcTest {
                 new NebulaGraphConnectionProvider(nebulaClientOptions);
         NebulaMetaConnectionProvider metaConnectionProvider =
                 new NebulaMetaConnectionProvider(nebulaClientOptions);
+        rowInsertDataStream.addSink(getNebulaInsertOptions(graphConnectionProvider,metaConnectionProvider));
+        rowUpdateDataStream.addSink(getNebulaUpdateOptions(graphConnectionProvider,metaConnectionProvider));
+        rowDeleteDataStream.addSink(getNebulaDeleteOptions(graphConnectionProvider,metaConnectionProvider));
+        env.execute("mysql_nebula_sync");
+    }
+
+    private static SinkFunction<Row> getNebulaDeleteOptions(NebulaGraphConnectionProvider graphConnectionProvider, NebulaMetaConnectionProvider metaConnectionProvider) {
+
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
@@ -132,16 +119,8 @@ public class CdcTest {
         return nebulaSinkFunction;
     }
 
-    private static SinkFunction<Row> getNebulaUpdateOptions() {
-        NebulaClientOptions nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress("127.0.0.1:9669")
-                        .setMetaAddress("127.0.0.1:9559")
-                        .build();
-        NebulaGraphConnectionProvider graphConnectionProvider =
-                new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
+    private static SinkFunction<Row> getNebulaUpdateOptions(NebulaGraphConnectionProvider graphConnectionProvider, NebulaMetaConnectionProvider metaConnectionProvider) {
+
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
@@ -162,16 +141,8 @@ public class CdcTest {
         return nebulaSinkFunction;
     }
 
-    public static NebulaSinkFunction getNebulaInsertOptions() {
-        NebulaClientOptions nebulaClientOptions =
-                new NebulaClientOptions.NebulaClientOptionsBuilder()
-                        .setGraphAddress("127.0.0.1:9669")
-                        .setMetaAddress("127.0.0.1:9559")
-                        .build();
-        NebulaGraphConnectionProvider graphConnectionProvider =
-                new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
+    public static NebulaSinkFunction getNebulaInsertOptions(NebulaGraphConnectionProvider graphConnectionProvider, NebulaMetaConnectionProvider metaConnectionProvider) {
+
 
         ExecutionOptions executionOptions = new VertexExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace("flinkSink")
