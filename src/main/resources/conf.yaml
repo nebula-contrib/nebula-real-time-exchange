@@ -6,14 +6,16 @@ mysqlSourceInList:
     password: 162331
 nebulaSink:
   tagList:
-    - tagName: person_simple
+    - sinkName: person_simple
       graphSpace: flinkSink
       graphAddress: "127.0.0.1:9669"
       metaAddress: "127.0.0.1:9559"
       sourceSql: mysql_01
       sourceDatabase: test
       sourceTable: person
-      idIndex: 0
+      idIndex:
+        sqlCol: "id"
+        position: 0
       fieldList:
         - name: "name"
           sqlCol: "name"
@@ -22,57 +24,63 @@ nebulaSink:
           sqlCol: "age"
           position: 2
   edgeList:
-    - edgeName: friend
+    - sinkName: friend
       graphSpace: flinkSink
       graphAddress: "127.0.0.1:9669"
       metaAddress: "127.0.0.1:9559"
       sourceSql: mysql_01
       sourceDatabase: test
       sourceTable: friend
-      srcIndex: 0
-      dstIndex: 1
-      rankIndex: 4
+      srcIndex:
+        sqlCol: "srcId"
+        position: 0
+      dstIndex:
+        sqlCol: "dstId"
+        position: 1
+      rankIndex:
+        sqlCol: "ranks"
+        position: 4
       fieldList:
         - name: "col1"
-          sqlCol: "name"
+          sqlCol: "col1"
           position: 2
         - name: "col2"
-          sqlCol: "alias"
+          sqlCol: "col2"
           position: 3
         - name: "col3"
-          sqlCol: "otheralias"
+          sqlCol: "ranks"
           position: 4
         - name: "col4"
-          sqlCol: "ranks"
+          sqlCol: "col4"
           position: 5
         - name: "col5"
-          sqlCol: "oneId"
+          sqlCol: "col5"
           position: 6
         - name: "col6"
-          sqlCol: "twoId"
+          sqlCol: "col6"
           position: 7
         - name: "col7"
-          sqlCol: "twoId"
+          sqlCol: "col7"
           position: 8
         - name: "col8"
-          sqlCol: "twoId"
+          sqlCol: "col8"
           position: 9
         - name: "col9"
-          sqlCol: "twoId"
+          sqlCol: "col9"
           position: 10
         - name: "col10"
-          sqlCol: "twoId"
+          sqlCol: "col10"
           position: 11
         - name: "col11"
-          sqlCol: "twoId"
+          sqlCol: "col11"
           position: 12
         - name: "col12"
-          sqlCol: "twoId"
+          sqlCol: "col12"
           position: 13
         - name: "col13"
-          sqlCol: "twoId"
+          sqlCol: "col13"
           position: 14
         - name: "col14"
-          sqlCol: "twoId"
+          sqlCol: "col14"
           position: 15
 

@@ -1,105 +1,53 @@
 package yaml;
 
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class SinkEdge {
-    public String edgeName;
-    public String graphSpace;
-    public String graphAddress;
-    public String metaAddress;
-    public String sourceSql;
-    public String sourceDatabase;
-    public String sourceTable;
-    public Integer srcIndex;
-    public Integer dstIndex;
-    public Integer rankIndex;
-    public List<fieldMap> fieldList;
+public class SinkEdge extends AbstractSinkType {
+    public final String TYPE = "edge";
+    public NebulaPropIndex srcIndex;
+    public NebulaPropIndex dstIndex;
+    public NebulaPropIndex rankIndex;
 
-    public String getEdgeName() {
-        return edgeName;
+    @Override
+    public String getSinkType() {
+        return this.TYPE;
     }
 
-    public void setEdgeName(String edgeName) {
-        this.edgeName = edgeName;
+    @Override
+    public ArrayList<String> getSqlColumn() {
+        ArrayList<String> sqlColumns = new ArrayList<>();
+        sqlColumns.add(srcIndex.sqlCol);
+        sqlColumns.add(dstIndex.sqlCol);
+        sqlColumns.add(rankIndex.sqlCol);
+        for (fieldMap fieldMap : fieldList) {
+            sqlColumns.add(fieldMap.sqlCol);
+        }
+        return sqlColumns;
     }
 
-    public String getGraphSpace() {
-        return graphSpace;
-    }
-
-    public void setGraphSpace(String graphSpace) {
-        this.graphSpace = graphSpace;
-    }
-
-    public String getGraphAddress() {
-        return graphAddress;
-    }
-
-    public void setGraphAddress(String graphAddress) {
-        this.graphAddress = graphAddress;
-    }
-
-    public String getMetaAddress() {
-        return metaAddress;
-    }
-
-    public void setMetaAddress(String metaAddress) {
-        this.metaAddress = metaAddress;
-    }
-
-    public String getSourceSql() {
-        return sourceSql;
-    }
-
-    public void setSourceSql(String sourceSql) {
-        this.sourceSql = sourceSql;
-    }
-
-    public String getSourceDatabase() {
-        return sourceDatabase;
-    }
-
-    public void setSourceDatabase(String sourceDatabase) {
-        this.sourceDatabase = sourceDatabase;
-    }
-
-    public String getSourceTable() {
-        return sourceTable;
-    }
-
-    public void setSourceTable(String sourceTable) {
-        this.sourceTable = sourceTable;
-    }
-
-    public Integer getSrcIndex() {
+    public NebulaPropIndex getSrcIndex() {
         return srcIndex;
     }
 
-    public void setSrcIndex(Integer srcIndex) {
+    public void setSrcIndex(NebulaPropIndex srcIndex) {
         this.srcIndex = srcIndex;
     }
 
-    public Integer getDstIndex() {
+    public NebulaPropIndex getDstIndex() {
         return dstIndex;
     }
 
-    public void setDstIndex(Integer dstIndex) {
+    public void setDstIndex(NebulaPropIndex dstIndex) {
         this.dstIndex = dstIndex;
     }
 
-    public Integer getRankIndex() {
+    public NebulaPropIndex getRankIndex() {
         return rankIndex;
     }
 
-    public void setRankIndex(Integer rankIndex) {
+    public void setRankIndex(NebulaPropIndex rankIndex) {
         this.rankIndex = rankIndex;
-    }
-
-    public List<fieldMap> getFieldList() {
-        return fieldList;
-    }
-
-    public void setFieldList(List<fieldMap> fieldList) {
-        this.fieldList = fieldList;
     }
 }

@@ -32,16 +32,16 @@ public class Runner {
         HashMap<String, Set<String>> sqlDbMap = new HashMap<>();
         HashMap<String, Set<String>> sqlTableMap = new HashMap<>();
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
-            sqlDbMap.computeIfAbsent(sinkTag.sourceSql, k -> new HashSet<String>())
+            sqlDbMap.computeIfAbsent(sinkTag.sourceSql, k -> new HashSet<>())
                     .add(sinkTag.sourceDatabase);
-            sqlTableMap.computeIfAbsent(sinkTag.sourceSql, k -> new HashSet<String>())
+            sqlTableMap.computeIfAbsent(sinkTag.sourceSql, k -> new HashSet<>())
                     .add(sinkTag.sourceDatabase + '.' + sinkTag.sourceTable);
 
         }
         for (SinkEdge sinkEdge : config.nebulaSink.edgeList) {
-            sqlDbMap.computeIfAbsent(sinkEdge.sourceSql, k -> new HashSet<String>())
+            sqlDbMap.computeIfAbsent(sinkEdge.sourceSql, k -> new HashSet<>())
                     .add(sinkEdge.sourceDatabase);
-            sqlTableMap.computeIfAbsent(sinkEdge.sourceSql, k -> new HashSet<String>())
+            sqlTableMap.computeIfAbsent(sinkEdge.sourceSql, k -> new HashSet<>())
                     .add(sinkEdge.sourceDatabase + '.' + sinkEdge.sourceTable);
         }
         HashMap<String, DataStreamSource<String>> mysqlSourceMap = new HashMap<>();
@@ -61,42 +61,62 @@ public class Runner {
                     WatermarkStrategy.noWatermarks(),
                     "MySQL Source"
             );
-            streamSource.print();
             mysqlSourceMap.put(mysqlSourceIn.sqlName, streamSource);
         }
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
-            ArrayList<String> fields = new ArrayList<>();
-            ArrayList<Integer> positions = new ArrayList<>();
+            ArrayList<String> fields = sinkTag.getFields();
+            ArrayList<Integer> positions = sinkTag.getPositions();
+            ArrayList<String> sqlColumn = sinkTag.getSqlColumn();
 
-            for (fieldMap fieldMap : sinkTag.fieldList) {
-                fields.add(fieldMap.name);
-                positions.add(fieldMap.position);
-            }
             for (WriteModeEnum operator : WriteModeEnum.values()) {
                 DataStream<Row> rowDataStream = mysqlSourceMap.get(sinkTag.sourceSql)
-                        .flatMap(new OperatorFlatMap(operator, sinkTag.sourceDatabase, sinkTag.sourceTable));
+                        .flatMap(new OperatorFlatMap(operator, sinkTag, sqlColumn));
+                rowDataStream.print();
                 rowDataStream.addSink(getNebulaVertexOption(sinkTag, fields, positions, operator));
             }
         }
         for (SinkEdge sinkEdge : config.nebulaSink.edgeList) {
-            ArrayList<String> fields = new ArrayList<>();
-            ArrayList<Integer> positions = new ArrayList<>();
-
-            for (fieldMap fieldMap : sinkEdge.fieldList) {
-                fields.add(fieldMap.name);
-                positions.add(fieldMap.position);
-            }
+            ArrayList<String> fields = sinkEdge.getFields();
+            ArrayList<Integer> positions = sinkEdge.getPositions();
+            ArrayList<String> sqlColumn = sinkEdge.getSqlColumn();
             for (WriteModeEnum operator : WriteModeEnum.values()) {
                 DataStream<Row> rowDataStream = mysqlSourceMap.get(sinkEdge.sourceSql)
-                        .flatMap(new OperatorFlatMap(operator, sinkEdge.sourceDatabase, sinkEdge.sourceTable));
+                        .flatMap(new OperatorFlatMap(operator, sinkEdge, sqlColumn));
                 rowDataStream.print();
                 rowDataStream.addSink(getNebulaEdgeOption(sinkEdge, fields, positions, operator));
             }
         }
 
-        env.execute("Print MySQL Snapshot + Binlog");
+        env.execute("MySQL real-time synchronization to Nebula Graph");
 
 
+    }
+
+
+
+    private static SinkFunction<Row> getNebulaVertexOption(SinkTag sinkTag, ArrayList<String> fields, ArrayList<Integer> positions, WriteModeEnum op) {
+        NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
+                .setGraphAddress(sinkTag.graphAddress)
+                .setMetaAddress(sinkTag.metaAddress)
+                .build();
+        NebulaGraphConnectionProvider graphConnectionProvider =
+                new NebulaGraphConnectionProvider(nebulaClientOptions);
+        NebulaMetaConnectionProvider metaConnectionProvider =
+                new NebulaMetaConnectionProvider(nebulaClientOptions);
+
+        VertexExecutionOptions.ExecutionOptionBuilder executionOptionBuilder = new VertexExecutionOptions.ExecutionOptionBuilder()
+                .setGraphSpace(sinkTag.graphSpace)
+                .setTag(sinkTag.sinkName)
+                .setIdIndex(sinkTag.idIndex.position)
+                .setFields(fields)
+                .setPositions(positions)
+                .setWriteMode(op)
+                .setBatch(5)
+                .setBathIntervalMs(500L);
+        NebulaBatchOutputFormat outPutFormat = new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
+                .setExecutionOptions(executionOptionBuilder.builder());
+        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
+        return nebulaSinkFunction;
     }
 
     private static SinkFunction<Row> getNebulaEdgeOption(SinkEdge sinkEdge, ArrayList<String> fields, ArrayList<Integer> positions, WriteModeEnum operator) {
@@ -111,10 +131,11 @@ public class Runner {
 
         EdgeExecutionOptions.ExecutionOptionBuilder executionOptionBuilder = new EdgeExecutionOptions.ExecutionOptionBuilder()
                 .setGraphSpace(sinkEdge.graphSpace)
-                .setEdge(sinkEdge.edgeName)
-                .setSrcIndex(sinkEdge.srcIndex)
-                .setDstIndex(sinkEdge.dstIndex)
-                .setRankIndex(sinkEdge.rankIndex)
+                .setEdge(sinkEdge.sinkName)
+                .setWriteMode(operator)
+                .setSrcIndex(sinkEdge.srcIndex.position)
+                .setDstIndex(sinkEdge.dstIndex.position)
+                .setRankIndex(sinkEdge.rankIndex.position)
                 .setFields(fields)
                 .setPositions(positions)
                 .setBatch(5)
@@ -125,31 +146,4 @@ public class Runner {
         return nebulaSinkFunction;
 
     }
-
-    private static SinkFunction<Row> getNebulaVertexOption(SinkTag sinkTag, ArrayList<String> fields, ArrayList<Integer> positions, WriteModeEnum op) {
-        NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
-                .setGraphAddress(sinkTag.graphAddress)
-                .setMetaAddress(sinkTag.metaAddress)
-                .build();
-        NebulaGraphConnectionProvider graphConnectionProvider =
-                new NebulaGraphConnectionProvider(nebulaClientOptions);
-        NebulaMetaConnectionProvider metaConnectionProvider =
-                new NebulaMetaConnectionProvider(nebulaClientOptions);
-
-        VertexExecutionOptions.ExecutionOptionBuilder executionOptionBuilder = new VertexExecutionOptions.ExecutionOptionBuilder()
-                .setGraphSpace(sinkTag.graphSpace)
-                .setTag(sinkTag.tagName)
-                .setIdIndex(sinkTag.idIndex)
-                .setFields(fields)
-                .setPositions(positions)
-                .setWriteMode(op)
-                .setBatch(5)
-                .setBathIntervalMs(500L);
-        NebulaBatchOutputFormat outPutFormat = new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
-                .setExecutionOptions(executionOptionBuilder.builder());
-        NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
-        return nebulaSinkFunction;
-    }
-
-
 }

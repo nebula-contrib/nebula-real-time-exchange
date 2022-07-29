@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <option name="projectDefaultTargetUuid" value="7b1605df-08bd-4788-b5c8-55582fdab784" />
+    <targets>
+      <target name="jtning@192.168.31.123:22" type="ssh/sftp" uuid="7b1605df-08bd-4788-b5c8-55582fdab784">
+        <config>
+          <option name="projectRootOnTarget" value="/home/jtning/Project/nebula-real-time-exchange" />
+          <option name="serverName" value="jtning@192.168.31.123:22 password" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/usr/lib/jvm/java-8-openjdk-amd64" />
+            <option name="javaVersionString" value="1.8.0_312" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>
