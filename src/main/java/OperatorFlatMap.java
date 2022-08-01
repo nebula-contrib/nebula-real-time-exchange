@@ -60,13 +60,14 @@ public class OperatorFlatMap implements FlatMapFunction<String, Row> {
         String op = jsonObject.getString("op");
         String table = jsonObject.getString("table");
         String db = jsonObject.getString("db");
-        JSONArray keyArray = jsonObject.getJSONArray("key");
         if (operator.contains(op) && db.equals(sourceDatabase) && table.equals(sourceTable)) {
+            JSONArray keyArray = jsonObject.getJSONArray("key");
             for (String keyCol : indexColumn) {
                 if (!keyArray.contains(keyCol)) {
                     LOG.warn("The Nebula Graph Index " + keyCol + "  might not be set as MySQL key");
                 }
             }
+
             LinkedHashMap dataMap = JSON.parseObject(jsonObject.getString("data"), LinkedHashMap.class,
                     Feature.OrderedField);
             Row row = new Row(columnList.size());

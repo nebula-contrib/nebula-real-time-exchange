@@ -16,13 +16,19 @@ public class SinkEdge extends AbstractSinkType {
     }
 
     @Override
-    public ArrayList<String> getSqlColumn() {
+    public ArrayList<String> getSqlColumns() {
         ArrayList<String> sqlColumns = new ArrayList<>();
-        sqlColumns.add(srcIndex.sqlCol);
-        sqlColumns.add(dstIndex.sqlCol);
-        sqlColumns.add(rankIndex.sqlCol);
         for (fieldMap fieldMap : fieldList) {
             sqlColumns.add(fieldMap.sqlCol);
+        }
+        if (!sqlColumns.contains(srcIndex.sqlCol)) {
+            sqlColumns.add(srcIndex.position, srcIndex.sqlCol);
+        }
+        if (!sqlColumns.contains(dstIndex.sqlCol)) {
+            sqlColumns.add(dstIndex.position, dstIndex.sqlCol);
+        }
+        if (!sqlColumns.contains(rankIndex.sqlCol)) {
+            sqlColumns.add(rankIndex.position, rankIndex.sqlCol);
         }
         return sqlColumns;
     }

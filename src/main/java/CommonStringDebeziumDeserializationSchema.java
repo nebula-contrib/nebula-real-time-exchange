@@ -1,5 +1,5 @@
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.ververica.cdc.debezium.DebeziumDeserializationSchema;
 import com.ververica.cdc.debezium.utils.TemporalConversions;
 import io.debezium.data.geometry.Geometry;
@@ -32,34 +32,34 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
     private final ArrayList<String> geoFormat = new ArrayList<>(Arrays.asList("Point", "LineString", "Polygon"));
 
     public void deserialize(SourceRecord record, Collector<String> out) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("ts_sec", (Long) record.sourceOffset().get("ts_sec"));
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("ts_sec", (Long) record.sourceOffset().get("ts_sec"));
         String[] name = record.valueSchema().name().split("\\.");
-        jsonObject.addProperty("db", name[1]);
-        jsonObject.addProperty("table", name[2]);
+        jsonObject.put("db", name[1]);
+        jsonObject.put("table", name[2]);
         Struct value = ((Struct) record.value());
         String operatorType = value.getString("op");
-        jsonObject.addProperty("op", operatorType);
+        jsonObject.put("op", operatorType);
 
         String valueFrom = "d".equals(operatorType) ? "before" : "after";
-        JsonObject dataJsonObject = parseRecord(value.getStruct(valueFrom));
-        jsonObject.add("data", dataJsonObject);
+        JSONObject dataJsonObject = parseRecord(value.getStruct(valueFrom));
+        jsonObject.put("data", dataJsonObject);
 
         Struct key = (Struct) record.key();
-        JsonArray keyArray = new JsonArray();
+        JSONArray keyArray = new JSONArray();
         for (Field field : key.schema().fields()) {
             keyArray.add(field.name());
         }
 
         //需设置sink所需的Index为主键才能正常update index
-        jsonObject.add("key", keyArray);
+        jsonObject.put("key", keyArray);
 
-        jsonObject.addProperty("parse_time", System.currentTimeMillis() / 1000);
+        jsonObject.put("parse_time", System.currentTimeMillis() / 1000);
         out.collect(jsonObject.toString());
     }
 
-    private JsonObject parseRecord(Struct after) {
-        JsonObject jo = new JsonObject();
+    private JSONObject parseRecord(Struct after) {
+        JSONObject jo = new JSONObject();
 
 
         for (Field field : after.schema().fields()) {
@@ -68,36 +68,36 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                     switch ((field.schema()).type()) {
                         case INT8:
                             int resultInt8 = after.getInt8(field.name());
-                            jo.addProperty(field.name(), resultInt8);
+                            jo.put(field.name(), resultInt8);
                             break;
                         case INT16:
                             int resultInt16 = after.getInt16(field.name());
-                            jo.addProperty(field.name(), resultInt16);
+                            jo.put(field.name(), resultInt16);
                             break;
                         case INT32:
                             int resultInt32 = after.getInt32(field.name());
-                            jo.addProperty(field.name(), resultInt32);
+                            jo.put(field.name(), resultInt32);
                             break;
                         case INT64:
                             Long resultInt = after.getInt64(field.name());
-                            jo.addProperty(field.name(), resultInt);
+                            jo.put(field.name(), resultInt);
                             break;
                         case FLOAT32:
                             Float resultFloat32 = after.getFloat32(field.name());
-                            jo.addProperty(field.name(), resultFloat32);
+                            jo.put(field.name(), resultFloat32);
                             break;
                         case FLOAT64:
                             Double resultFloat64 = after.getFloat64(field.name());
-                            jo.addProperty(field.name(), resultFloat64);
+                            jo.put(field.name(), resultFloat64);
                             break;
                         case BYTES:
                             // json ignore byte column
                             byte[] resultByte = after.getBytes(field.name());
-                            jo.addProperty(field.name(), Arrays.toString(resultByte));
+                            jo.put(field.name(), Arrays.toString(resultByte));
                             break;
                         case STRING:
                             String resultStr = after.getString(field.name());
-                            jo.addProperty(field.name(), resultStr);
+                            jo.put(field.name(), resultStr);
                             break;
                         default:
                     }
@@ -106,23 +106,23 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                     switch (field.schema().name()) {
                         case Date.SCHEMA_NAME:
                             String resultDateStr = TemporalConversions.toLocalDate(after.get(field.name())).toString();
-                            jo.addProperty(field.name(), resultDateStr);
+                            jo.put(field.name(), resultDateStr);
                             break;
                         case Timestamp.SCHEMA_NAME:
                             TimestampData resultTime = TimestampData.fromEpochMillis((Long) after.get(field.name()));
-                            jo.addProperty(field.name(), String.valueOf(resultTime));
+                            jo.put(field.name(), String.valueOf(resultTime));
                             break;
                         case MicroTimestamp.SCHEMA_NAME:
                             long micro = (Long) after.get(field.name());
                             TimestampData resultMicroTimestamp = TimestampData.fromEpochMillis(micro / 1000L,
                                     (int) (micro % 1000L * 1000L));
-                            jo.addProperty(field.name(), String.valueOf(resultMicroTimestamp));
+                            jo.put(field.name(), String.valueOf(resultMicroTimestamp));
                             break;
                         case NanoTimestamp.SCHEMA_NAME:
                             long nano = (Long) after.get(field.name());
                             TimestampData resultNanoTimestamp = TimestampData.fromEpochMillis(nano / 1000000L,
                                     (int) (nano % 1000000L));
-                            jo.addProperty(field.name(), String.valueOf(resultNanoTimestamp));
+                            jo.put(field.name(), String.valueOf(resultNanoTimestamp));
                             break;
                         case ZonedTimestamp.SCHEMA_NAME:
                             if (after.get(field.name()) instanceof String) {
@@ -132,7 +132,7 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                                 ZoneId serverTimeZone = ZoneId.systemDefault();
                                 TimestampData resultZonedTimestamp = TimestampData.fromLocalDateTime(
                                         LocalDateTime.ofInstant(instant, serverTimeZone));
-                                jo.addProperty(field.name(), String.valueOf(resultZonedTimestamp));
+                                jo.put(field.name(), String.valueOf(resultZonedTimestamp));
                             } else {
                                 throw new IllegalArgumentException("Unable to convert to TimestampData from unexpected value ");
                             }
@@ -148,7 +148,7 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                                         .toSecondOfDay() * 1000;
                             }
                             String resultMicroTimeStr = sdf.format(resultMicroTime);
-                            jo.addProperty(field.name(), resultMicroTimeStr);
+                            jo.put(field.name(), resultMicroTimeStr);
                             break;
                         case NanoTime.SCHEMA_NAME:
                             int resultNanoTime;
@@ -161,11 +161,10 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                                         .toSecondOfDay() * 1000;
                             }
                             String resultNanoTimeStr = sdf.format(resultNanoTime);
-                            jo.addProperty(field.name(), resultNanoTimeStr);
+                            jo.put(field.name(), resultNanoTimeStr);
                             break;
                         case Geometry.LOGICAL_NAME:
                             Struct geoStruct = after.getStruct(field.name());
-                            System.out.println(geoStruct);
                             WKBReader wkbReader = new WKBReader();
                             byte[] wkbs = geoStruct.getBytes("wkb");
 
@@ -184,14 +183,14 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
                                 } else {
                                     geoWkbStr = geoWkb.toText();
                                 }
-                                jo.addProperty(field.name(), geoWkbStr);
+                                jo.put(field.name(), geoWkbStr);
                             } catch (ParseException e) {
                                 throw new RuntimeException(e);
                             }
                     }
                 }
             } else {
-                jo.addProperty(field.name(), (String) null);
+                jo.put(field.name(), null);
             }
         }
 

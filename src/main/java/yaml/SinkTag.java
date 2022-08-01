@@ -21,11 +21,13 @@ public class SinkTag extends AbstractSinkType {
     }
 
     @Override
-    public ArrayList<String> getSqlColumn() {
+    public ArrayList<String> getSqlColumns() {
         ArrayList<String> sqlColumns = new ArrayList<>();
-        sqlColumns.add(idIndex.sqlCol);
         for (fieldMap fieldMap : fieldList) {
             sqlColumns.add(fieldMap.sqlCol);
+        }
+        if (!sqlColumns.contains(idIndex.sqlCol)) {
+            sqlColumns.add(idIndex.position, idIndex.sqlCol);
         }
         return sqlColumns;
     }

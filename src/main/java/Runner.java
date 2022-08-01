@@ -1,5 +1,7 @@
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
+import com.ververica.cdc.connectors.mysql.table.StartupOptions;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.restartstrategy.RestartStrategies;
 import org.apache.flink.connector.nebula.connection.NebulaClientOptions;
 import org.apache.flink.connector.nebula.connection.NebulaGraphConnectionProvider;
 import org.apache.flink.connector.nebula.connection.NebulaMetaConnectionProvider;
@@ -8,26 +10,36 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
+import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.shaded.jackson2.org.yaml.snakeyaml.Yaml;
 import org.apache.flink.shaded.jackson2.org.yaml.snakeyaml.constructor.Constructor;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.apache.flink.types.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import yaml.*;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Runner {
-    public static void main(String[] args) throws Exception {
+    private static final Logger LOG = LoggerFactory.getLogger(Runner.class);
+
+    public static void main(String[] args) throws IOException {
 
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(1);
+        env.setParallelism(5);
 
         Yaml configYaml = new Yaml(new Constructor(Mysql2NebulaConfig.class));
-        InputStream configInput = Runner.class.getClassLoader().getResourceAsStream(args[0]);
+        InputStream configInput = Files.newInputStream(Paths.get(args[0]));
         Mysql2NebulaConfig config = configYaml.loadAs(configInput, Mysql2NebulaConfig.class);
         HashMap<String, Set<String>> sqlDbMap = new HashMap<>();
         HashMap<String, Set<String>> sqlTableMap = new HashMap<>();
@@ -55,6 +67,7 @@ public class Runner {
                     .password(mysqlSourceIn.password)
                     .databaseList(dbSet.toArray(new String[0]))
                     .tableList(tableSet.toArray(new String[0]))
+                    .startupOptions(StartupOptions.initial())
                     .deserializer(new CommonStringDebeziumDeserializationSchema())
                     .build();
             DataStreamSource<String> streamSource = env.fromSource(sourceFunction,
@@ -63,35 +76,42 @@ public class Runner {
             );
             mysqlSourceMap.put(mysqlSourceIn.sqlName, streamSource);
         }
+        env.enableCheckpointing(5000L);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 2000L));
+        // TODO:Add persistent backend support
+        //env.setStateBackend(new FsStateBackend("hdfs://127.0.0.1:9000/test`"));
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
             ArrayList<String> fields = sinkTag.getFields();
             ArrayList<Integer> positions = sinkTag.getPositions();
-            ArrayList<String> sqlColumn = sinkTag.getSqlColumn();
+            ArrayList<String> sqlColumn = sinkTag.getSqlColumns();
 
             for (WriteModeEnum operator : WriteModeEnum.values()) {
                 DataStream<Row> rowDataStream = mysqlSourceMap.get(sinkTag.sourceSql)
                         .flatMap(new OperatorFlatMap(operator, sinkTag, sqlColumn));
-                rowDataStream.print();
+//                rowDataStream.print();
                 rowDataStream.addSink(getNebulaVertexOption(sinkTag, fields, positions, operator));
             }
         }
         for (SinkEdge sinkEdge : config.nebulaSink.edgeList) {
             ArrayList<String> fields = sinkEdge.getFields();
             ArrayList<Integer> positions = sinkEdge.getPositions();
-            ArrayList<String> sqlColumn = sinkEdge.getSqlColumn();
+            ArrayList<String> sqlColumn = sinkEdge.getSqlColumns();
+
             for (WriteModeEnum operator : WriteModeEnum.values()) {
                 DataStream<Row> rowDataStream = mysqlSourceMap.get(sinkEdge.sourceSql)
                         .flatMap(new OperatorFlatMap(operator, sinkEdge, sqlColumn));
-                rowDataStream.print();
+//                rowDataStream.print();
                 rowDataStream.addSink(getNebulaEdgeOption(sinkEdge, fields, positions, operator));
             }
         }
-
-        env.execute("MySQL real-time synchronization to Nebula Graph");
-
-
+        try {
+            env.execute("MySQL real-time synchronization to Nebula Graph");
+        } catch (Exception e) {
+            LOG.error("Cannot start real-time synchronization %s", e);
+        }
     }
-
 
 
     private static SinkFunction<Row> getNebulaVertexOption(SinkTag sinkTag, ArrayList<String> fields, ArrayList<Integer> positions, WriteModeEnum op) {
@@ -146,4 +166,15 @@ public class Runner {
         return nebulaSinkFunction;
 
     }
+
+//    public void initialSqlList(List<AbstractSinkType> sinkTypeList) {
+//
+//        for (AbstractSinkType abstractSinkType : sinkTypeList) {
+//            this.sqlDbMap.computeIfAbsent(abstractSinkType.sourceSql, k -> new HashSet<>())
+//                    .add(abstractSinkType.sourceDatabase);
+//            this.sqlTableMap.computeIfAbsent(abstractSinkType.sourceSql, k -> new HashSet<>())
+//                    .add(abstractSinkType.sourceDatabase + '.' + abstractSinkType.sourceTable);
+//
+//        }
+//    }
 }

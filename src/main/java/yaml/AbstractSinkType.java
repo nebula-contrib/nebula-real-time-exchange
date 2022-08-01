@@ -31,7 +31,7 @@ public abstract class AbstractSinkType {
         return positions;
     }
 
-    public abstract ArrayList<String> getSqlColumn();
+    public abstract ArrayList<String> getSqlColumns();
 
 
     public String getSinkName() {
