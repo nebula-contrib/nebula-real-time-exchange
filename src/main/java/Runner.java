@@ -10,7 +10,6 @@ import org.apache.flink.connector.nebula.sink.NebulaSinkFunction;
 import org.apache.flink.connector.nebula.statement.EdgeExecutionOptions;
 import org.apache.flink.connector.nebula.statement.VertexExecutionOptions;
 import org.apache.flink.connector.nebula.utils.WriteModeEnum;
-import org.apache.flink.runtime.state.filesystem.FsStateBackend;
 import org.apache.flink.shaded.jackson2.org.yaml.snakeyaml.Yaml;
 import org.apache.flink.shaded.jackson2.org.yaml.snakeyaml.constructor.Constructor;
 import org.apache.flink.streaming.api.CheckpointingMode;
@@ -35,12 +34,33 @@ public class Runner {
 
     public static void main(String[] args) throws IOException {
 
-        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-        env.setParallelism(5);
 
         Yaml configYaml = new Yaml(new Constructor(Mysql2NebulaConfig.class));
         InputStream configInput = Files.newInputStream(Paths.get(args[0]));
         Mysql2NebulaConfig config = configYaml.loadAs(configInput, Mysql2NebulaConfig.class);
+
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(5);
+
+        HashMap<String, DataStreamSource<String>> mysqlSourceMap = sourceFromMysql(config,env);
+
+        // TODO:Add persistent backend support
+        //env.setStateBackend(new FsStateBackend("hdfs://127.0.0.1:9000/test`"));
+        env.enableCheckpointing(5000L);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 2000L));
+
+        sinkToNebula(config, mysqlSourceMap);
+        try {
+            env.execute("MySQL real-time synchronization to Nebula Graph");
+        } catch (Exception e) {
+            LOG.error("Cannot start real-time synchronization %s", e);
+        }
+    }
+
+
+    private static HashMap<String, DataStreamSource<String>> sourceFromMysql(Mysql2NebulaConfig config, StreamExecutionEnvironment env) {
         HashMap<String, Set<String>> sqlDbMap = new HashMap<>();
         HashMap<String, Set<String>> sqlTableMap = new HashMap<>();
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
@@ -76,12 +96,10 @@ public class Runner {
             );
             mysqlSourceMap.put(mysqlSourceIn.sqlName, streamSource);
         }
-        env.enableCheckpointing(5000L);
-        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
-        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
-        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 2000L));
-        // TODO:Add persistent backend support
-        //env.setStateBackend(new FsStateBackend("hdfs://127.0.0.1:9000/test`"));
+        return mysqlSourceMap;
+    }
+
+    private static void sinkToNebula(Mysql2NebulaConfig config, HashMap<String, DataStreamSource<String>> mysqlSourceMap) {
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
             ArrayList<String> fields = sinkTag.getFields();
             ArrayList<Integer> positions = sinkTag.getPositions();
@@ -106,13 +124,7 @@ public class Runner {
                 rowDataStream.addSink(getNebulaEdgeOption(sinkEdge, fields, positions, operator));
             }
         }
-        try {
-            env.execute("MySQL real-time synchronization to Nebula Graph");
-        } catch (Exception e) {
-            LOG.error("Cannot start real-time synchronization %s", e);
-        }
     }
-
 
     private static SinkFunction<Row> getNebulaVertexOption(SinkTag sinkTag, ArrayList<String> fields, ArrayList<Integer> positions, WriteModeEnum op) {
         NebulaClientOptions nebulaClientOptions = new NebulaClientOptions.NebulaClientOptionsBuilder()
@@ -155,26 +167,18 @@ public class Runner {
                 .setWriteMode(operator)
                 .setSrcIndex(sinkEdge.srcIndex.position)
                 .setDstIndex(sinkEdge.dstIndex.position)
-                .setRankIndex(sinkEdge.rankIndex.position)
                 .setFields(fields)
                 .setPositions(positions)
                 .setBatch(5)
                 .setBathIntervalMs(500L);
+        if (sinkEdge.isRankIndexPresent()) {
+            executionOptionBuilder.setRankIndex(sinkEdge.rankIndex.position);
+
+        }
         NebulaBatchOutputFormat outPutFormat = new NebulaBatchOutputFormat(graphConnectionProvider, metaConnectionProvider)
                 .setExecutionOptions(executionOptionBuilder.builder());
         NebulaSinkFunction nebulaSinkFunction = new NebulaSinkFunction(outPutFormat);
         return nebulaSinkFunction;
 
     }
-
-//    public void initialSqlList(List<AbstractSinkType> sinkTypeList) {
-//
-//        for (AbstractSinkType abstractSinkType : sinkTypeList) {
-//            this.sqlDbMap.computeIfAbsent(abstractSinkType.sourceSql, k -> new HashSet<>())
-//                    .add(abstractSinkType.sourceDatabase);
-//            this.sqlTableMap.computeIfAbsent(abstractSinkType.sourceSql, k -> new HashSet<>())
-//                    .add(abstractSinkType.sourceDatabase + '.' + abstractSinkType.sourceTable);
-//
-//        }
-//    }
 }

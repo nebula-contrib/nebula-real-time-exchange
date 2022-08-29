@@ -32,12 +32,13 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
     private final ArrayList<String> geoFormat = new ArrayList<>(Arrays.asList("Point", "LineString", "Polygon"));
 
     public void deserialize(SourceRecord record, Collector<String> out) {
+        System.out.println(record);
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("ts_sec", (Long) record.sourceOffset().get("ts_sec"));
         String[] name = record.valueSchema().name().split("\\.");
         jsonObject.put("db", name[1]);
         jsonObject.put("table", name[2]);
-        Struct value = ((Struct) record.value());
+        Struct value = (Struct) record.value();
         String operatorType = value.getString("op");
         jsonObject.put("op", operatorType);
 
@@ -58,24 +59,23 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
         out.collect(jsonObject.toString());
     }
 
-    private JSONObject parseRecord(Struct after) {
+    protected JSONObject parseRecord(Struct after) {
         JSONObject jo = new JSONObject();
-
 
         for (Field field : after.schema().fields()) {
             if (after.get(field.name()) != null) {
-                if (field.schema().name() == null) {
-                    switch ((field.schema()).type()) {
+                if (field.schema().type().isPrimitive()) {
+                    switch (field.schema().type()) {
                         case INT8:
-                            int resultInt8 = after.getInt8(field.name());
+                            Byte resultInt8 = after.getInt8(field.name());
                             jo.put(field.name(), resultInt8);
                             break;
                         case INT16:
-                            int resultInt16 = after.getInt16(field.name());
+                            Short resultInt16 = after.getInt16(field.name());
                             jo.put(field.name(), resultInt16);
                             break;
                         case INT32:
-                            int resultInt32 = after.getInt32(field.name());
+                            Integer resultInt32 = after.getInt32(field.name());
                             jo.put(field.name(), resultInt32);
                             break;
                         case INT64:

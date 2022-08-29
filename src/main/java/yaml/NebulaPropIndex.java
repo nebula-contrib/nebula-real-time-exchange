@@ -19,4 +19,8 @@ public class NebulaPropIndex {
     public void setPosition(Integer position) {
         this.position = position;
     }
+
+    public boolean isPresent() {
+        return !this.sqlCol.isEmpty() && (this.position != null);
+    }
 }

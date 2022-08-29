@@ -46,7 +46,9 @@ public class OperatorFlatMap implements FlatMapFunction<String, Row> {
             SinkEdge edge = (SinkEdge) abstractSinkType;
             indexColumn.add(edge.srcIndex.sqlCol);
             indexColumn.add(edge.dstIndex.sqlCol);
-            indexColumn.add(edge.rankIndex.sqlCol);
+            if (edge.isRankIndexPresent()) {
+                indexColumn.add(edge.rankIndex.sqlCol);
+            }
         }
         this.indexColumn = indexColumn;
         this.columnList = sqlColumn;

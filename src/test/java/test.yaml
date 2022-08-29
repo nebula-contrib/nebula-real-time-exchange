@@ -1,0 +1,77 @@
+mysqlSourceInList:
+  - sqlName: mysql_01
+    address: 127.0.0.1
+    port: 3306
+    username: root
+    password: 162331
+nebulaSink:
+  tagList:
+    - sinkName: player
+      graphSpace: basketballplayer
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: player
+      idIndex:
+        sqlCol: "playerid"
+        position: 0
+      fieldList:
+        - name: "name"
+          sqlCol: "name"
+          position: 1
+        - name: "age"
+          sqlCol: "age"
+          position: 2
+    - sinkName: team
+      graphSpace: basketballplayer
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: team
+      idIndex:
+        sqlCol: "teamid"
+        position: 0
+      fieldList:
+        - name: "name"
+          sqlCol: "name"
+          position: 1
+  edgeList:
+    - sinkName: follow
+      graphSpace: basketballplayer
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: follow
+      srcIndex:
+        sqlCol: "src_player"
+        position: 0
+      dstIndex:
+        sqlCol: "dst_player"
+        position: 1
+      fieldList:
+        - name: "degree"
+          sqlCol: "degree"
+          position: 2
+    - sinkName: serve
+      graphSpace: basketballplayer
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: serve
+      srcIndex:
+        sqlCol: "playerid"
+        position: 0
+      dstIndex:
+        sqlCol: "teamid"
+        position: 1
+      fieldList:
+        - name: "start_year"
+          sqlCol: "start_year"
+          position: 2
+        - name: "end_year"
+          sqlCol: "end_year"
+          position: 3

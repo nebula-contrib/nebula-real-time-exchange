@@ -27,8 +27,10 @@ public class SinkEdge extends AbstractSinkType {
         if (!sqlColumns.contains(dstIndex.sqlCol)) {
             sqlColumns.add(dstIndex.position, dstIndex.sqlCol);
         }
-        if (!sqlColumns.contains(rankIndex.sqlCol)) {
-            sqlColumns.add(rankIndex.position, rankIndex.sqlCol);
+        if (isRankIndexPresent()) {
+            if (!sqlColumns.contains(rankIndex.sqlCol)) {
+                sqlColumns.add(rankIndex.position, rankIndex.sqlCol);
+            }
         }
         return sqlColumns;
     }
@@ -55,5 +57,9 @@ public class SinkEdge extends AbstractSinkType {
 
     public void setRankIndex(NebulaPropIndex rankIndex) {
         this.rankIndex = rankIndex;
+    }
+
+    public boolean isRankIndexPresent(){
+        return rankIndex != null;
     }
 }
