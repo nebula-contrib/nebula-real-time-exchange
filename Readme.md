@@ -11,7 +11,7 @@ mysql> desc player;
 +----------+-------------+------+-----+---------+-------+
 | Field    | Type        | Null | Key | Default | Extra |
 +----------+-------------+------+-----+---------+-------+
-| playerid | varchar(30) | YES  |     | NULL    |       |
+| playerid | varchar(30) | YES  | YES | NULL    |       |
 | age      | int         | YES  |     | NULL    |       |
 | name     | varchar(30) | YES  |     | NULL    |       |
 +----------+-------------+------+-----+---------+-------+
@@ -20,7 +20,7 @@ mysql> desc team;
 +--------+-------------+------+-----+---------+-------+
 | Field  | Type        | Null | Key | Default | Extra |
 +--------+-------------+------+-----+---------+-------+
-| teamid | varchar(30) | YES  |     | NULL    |       |
+| teamid | varchar(30) | YES  | YES | NULL    |       |
 | name   | varchar(30) | YES  |     | NULL    |       |
 +--------+-------------+------+-----+---------+-------+
 
@@ -28,8 +28,8 @@ mysql> desc follow;
 +------------+-------------+------+-----+---------+-------+
 | Field      | Type        | Null | Key | Default | Extra |
 +------------+-------------+------+-----+---------+-------+
-| src_player | varchar(30) | YES  |     | NULL    |       |
-| dst_player | varchar(30) | YES  |     | NULL    |       |
+| src_player | varchar(30) | YES  | YES | NULL    |       |
+| dst_player | varchar(30) | YES  | YES | NULL    |       |
 | degree     | int         | YES  |     | NULL    |       |
 +------------+-------------+------+-----+---------+-------+
 
@@ -37,8 +37,8 @@ mysql> desc serve;
 +------------+-------------+------+-----+---------+-------+
 | Field      | Type        | Null | Key | Default | Extra |
 +------------+-------------+------+-----+---------+-------+
-| playerid   | varchar(30) | YES  |     | NULL    |       |
-| teamid     | varchar(30) | YES  |     | NULL    |       |
+| playerid   | varchar(30) | YES  | YES | NULL    |       |
+| teamid     | varchar(30) | YES  | YES | NULL    |       |
 | start_year | int         | YES  |     | NULL    |       |
 | end_year   | int         | YES  |     | NULL    |       |
 +------------+-------------+------+-----+---------+-------+
