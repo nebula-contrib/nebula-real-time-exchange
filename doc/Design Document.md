@@ -36,7 +36,7 @@ MySQL由于自身简单、高效、可靠的特点，成为当下使用最广泛
 
 # 概要设计
 
-![Untitled Diagram.drawio-2](doc/design.png)
+![Untitled Diagram.drawio-2](https://github.com/ToJ112/nebula-real-time-exchange/blob/main/doc/design.png?raw=true)
 
 FlinkCDC通过解析MySQL数据库的Binlog日志捕获变更数据，并通过Reader部分将binlog日志解析为需要处理的DataStream。而后，Processor将根据配置信息将Source数据分库分表进行处理，分流成为Tag和Edge数据，并根据解析数据的不同操作将DataStream分流。最后，Writer部分根据分流结果将流数据通过Nebula Sink对Nebula Graph数据库中的Tag和Edge同步操作。
 
