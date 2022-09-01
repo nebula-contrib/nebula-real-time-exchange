@@ -42,7 +42,7 @@ public class Runner {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(5);
 
-        HashMap<String, DataStreamSource<String>> mysqlSourceMap = sourceFromMysql(config,env);
+        HashMap<String, DataStreamSource<String>> mysqlSourceMap = mysqlReader(config,env);
 
         // TODO:Add persistent backend support
         //env.setStateBackend(new FsStateBackend("hdfs://127.0.0.1:9000/test`"));
@@ -51,7 +51,7 @@ public class Runner {
         env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
         env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, 2000L));
 
-        sinkToNebula(config, mysqlSourceMap);
+        nebulaWriter(config, mysqlSourceMap);
         try {
             env.execute("MySQL real-time synchronization to Nebula Graph");
         } catch (Exception e) {
@@ -60,7 +60,7 @@ public class Runner {
     }
 
 
-    private static HashMap<String, DataStreamSource<String>> sourceFromMysql(Mysql2NebulaConfig config, StreamExecutionEnvironment env) {
+    private static HashMap<String, DataStreamSource<String>> mysqlReader(Mysql2NebulaConfig config, StreamExecutionEnvironment env) {
         HashMap<String, Set<String>> sqlDbMap = new HashMap<>();
         HashMap<String, Set<String>> sqlTableMap = new HashMap<>();
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
@@ -99,7 +99,7 @@ public class Runner {
         return mysqlSourceMap;
     }
 
-    private static void sinkToNebula(Mysql2NebulaConfig config, HashMap<String, DataStreamSource<String>> mysqlSourceMap) {
+    private static void nebulaWriter(Mysql2NebulaConfig config, HashMap<String, DataStreamSource<String>> mysqlSourceMap) {
         for (SinkTag sinkTag : config.nebulaSink.tagList) {
             ArrayList<String> fields = sinkTag.getFields();
             ArrayList<Integer> positions = sinkTag.getPositions();

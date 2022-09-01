@@ -52,8 +52,8 @@ public class CommonStringDebeziumDeserializationSchema implements DebeziumDeseri
             keyArray.add(field.name());
         }
 
-        //需设置sink所需的Index为主键才能正常update index
-        jsonObject.put("key", keyArray);
+        //jsonObject.put("key", keyArray);需设置sink所需的Index为主键才能正常update index
+
 
         jsonObject.put("parse_time", System.currentTimeMillis() / 1000);
         out.collect(jsonObject.toString());
