@@ -11,7 +11,7 @@ mysql> desc player;
 +----------+-------------+------+-----+---------+-------+
 | Field    | Type        | Null | Key | Default | Extra |
 +----------+-------------+------+-----+---------+-------+
-| playerid | varchar(30) | YES  |     | NULL    |       |
+| playerid | varchar(30) | YES  | YES | NULL    |       |
 | age      | int         | YES  |     | NULL    |       |
 | name     | varchar(30) | YES  |     | NULL    |       |
 +----------+-------------+------+-----+---------+-------+
@@ -20,7 +20,7 @@ mysql> desc team;
 +--------+-------------+------+-----+---------+-------+
 | Field  | Type        | Null | Key | Default | Extra |
 +--------+-------------+------+-----+---------+-------+
-| teamid | varchar(30) | YES  |     | NULL    |       |
+| teamid | varchar(30) | YES  | YES | NULL    |       |
 | name   | varchar(30) | YES  |     | NULL    |       |
 +--------+-------------+------+-----+---------+-------+
 
@@ -28,8 +28,8 @@ mysql> desc follow;
 +------------+-------------+------+-----+---------+-------+
 | Field      | Type        | Null | Key | Default | Extra |
 +------------+-------------+------+-----+---------+-------+
-| src_player | varchar(30) | YES  |     | NULL    |       |
-| dst_player | varchar(30) | YES  |     | NULL    |       |
+| src_player | varchar(30) | YES  | YES | NULL    |       |
+| dst_player | varchar(30) | YES  | YES | NULL    |       |
 | degree     | int         | YES  |     | NULL    |       |
 +------------+-------------+------+-----+---------+-------+
 
@@ -37,8 +37,8 @@ mysql> desc serve;
 +------------+-------------+------+-----+---------+-------+
 | Field      | Type        | Null | Key | Default | Extra |
 +------------+-------------+------+-----+---------+-------+
-| playerid   | varchar(30) | YES  |     | NULL    |       |
-| teamid     | varchar(30) | YES  |     | NULL    |       |
+| playerid   | varchar(30) | YES  | YES | NULL    |       |
+| teamid     | varchar(30) | YES  | YES | NULL    |       |
 | start_year | int         | YES  |     | NULL    |       |
 | end_year   | int         | YES  |     | NULL    |       |
 +------------+-------------+------+-----+---------+-------+
@@ -101,28 +101,28 @@ binlog_do_db=数据库2
 
 2. 在 Nebula Graph 中创建一个图空间 **basketballplayer**，并创建一个 Schema，如下所示。
 
-   ```bash
-   ## 创建图空间
-   nebula> CREATE SPACE basketballplayer \
-           (partition_num = 10, \
-           replica_factor = 1, \
-           vid_type = FIXED_STRING(30));
-   
-   ## 选择图空间 basketballplayer
-   nebula> USE basketballplayer;
-   
-   ## 创建 Tag player
-   nebula> CREATE TAG player(name string, age int);
-   
-   ## 创建 Tag team
-   nebula> CREATE TAG team(name string);
-   
-   ## 创建 Edge type follow
-   nebula> CREATE EDGE follow(degree int);
-   
-   ## 创建 Edge type serve
-   nebula> CREATE EDGE serve(start_year int, end_year int);
-   ```
+```bash
+## 创建图空间
+nebula> CREATE SPACE basketballplayer \
+   (partition_num = 10, \
+   replica_factor = 1, \
+   vid_type = FIXED_STRING(30));
+
+## 选择图空间 basketballplayer
+nebula> USE basketballplayer;
+
+## 创建 Tag player
+nebula> CREATE TAG player(name string, age int);
+
+## 创建 Tag team
+nebula> CREATE TAG team(name string);
+
+## 创建 Edge type follow
+nebula> CREATE EDGE follow(degree int);
+
+## 创建 Edge type serve
+nebula> CREATE EDGE serve(start_year int, end_year int);
+```
 
 更多信息，请参见[快速开始](https://docs.nebula-graph.com.cn/3.0.0/2.quick-start/1.quick-start-workflow/)
 
@@ -132,7 +132,7 @@ binlog_do_db=数据库2
 
 ```yaml
 mysqlSourceInList:
-	# 需同步到Nebula Graph的MySQL数据库，可指定多个数据库，并与下方nebulaSink中数据信息对应
+# 需同步到Nebula Graph的MySQL数据库，可指定多个数据库，并与下方nebulaSink中数据信息对应
   - sqlName: mysql_01
     address: 127.0.0.1
     port: 3306
