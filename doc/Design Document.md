@@ -87,7 +87,7 @@ private static HashMap<String, DataStreamSource<String>> mysqlReader(Mysql2Nebul
     }
 ```
 
-在使用默认反序列化器时，从MySQL读取的binlog数据将会解析为如下的SourceRecord
+在使用默认反序列化器时，从MySQL读取的binlog数据将会解析为类似如下的SourceRecord
 
 ```json
 SourceRecord{sourcePartition={server=mysql_binlog_source}, sourceOffset={ts_sec=1648043118, file=mysql-bin.000008, pos=16610, gtids=f7e8908c-e34a-11ea-b5e3-00163e128b67:1-120, row=1, server_id=1, event=2}} ConnectRecord{topic='mysql_binlog_source.bank1.record', kafkaPartition=null, key=null, keySchema=null, value=Struct{after=Struct{id=008,name=mike,version=36},source=Struct{version=1.4.1.Final,connector=mysql,name=mysql_binlog_source,ts_ms=1648043118000,db=bank1,table=record,server_id=1,gtid=f7e8908c-e34a-11ea-b5e3-00163e128b67:121,file=mysql-bin.000008,pos=16739,row=0,thread=152},op=c,ts_ms=1648043119363}, valueSchema=Schema{mysql_binlog_source.bank1.record.Envelope:STRUCT}, timestamp=null, headers=ConnectHeaders(headers=)}
