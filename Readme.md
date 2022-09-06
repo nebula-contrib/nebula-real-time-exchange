@@ -56,7 +56,7 @@ mysql> desc serve;
 
 - 已经编译 Real-Time Exchange。
 
-- 已经安装 Flink。
+- 已经安装 Flink 并启动。
 
 - 了解 Nebula Graph 中创建 Schema 的信息，包括 Tag 和 Edge type 的名称、属性等。
   - 同步Edge信息需保证对应的Vertex存在
@@ -85,6 +85,9 @@ binlog_do_db=数据库1
 binlog_do_db=数据库2
 ...
 ```
+然后重启 MySQL
+
+```systemctl restart mysqld```
 
 ### 步骤 2：在 Nebula Graph 中创建 Schema
 
