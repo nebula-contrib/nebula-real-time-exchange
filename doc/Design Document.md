@@ -1,4 +1,4 @@
-Nebula Real-Time Exchange致力于提供从关系型数据库到Nebula Graph的异构数据源实时同步解决方案。项目基于Flink及其配套CDC组件完成不同数据源的插入问题。通过FlinkCDC提供的丰富上游connector，可以构建不同来源数据库的数据流入；在下游接入Nebula开源的nebula-flink-cdc组件，可以良好实现上下游数据的实时同步功能。
+Nebula Real-Time Exchange致力于提供从关系型数据库到Nebula Graph的异构数据源实时同步解决方案。项目基于Flink及其配套CDC组件完成不同数据源的插入问题。通过FlinkCDC提供的丰富上游connector，可以构建不同来源数据库的数据流入；在下游接入Nebula开源的nebula-flink-cdc组件，可以良好实现上下游数据的实时同步功能。项目当前暂时仅支持从MySQL到Nebula Graph的同步。
 
 # 项目背景
 
