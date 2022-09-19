@@ -59,7 +59,6 @@ mysql> desc serve;
 - 已经安装 Flink 并启动。
 
 - 了解 Nebula Graph 中创建 Schema 的信息，包括 Tag 和 Edge type 的名称、属性等。
-  - 同步Edge信息需保证对应的Vertex存在
 
 ## 操作步骤
 
