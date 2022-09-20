@@ -4,7 +4,8 @@ Nebula Real-Time Exchange致力于提供从关系型数据库到Nebula Graph的�
 
 如下图所示，目前Nebula Graph已支持以下工具实现数据迁移：
 
-![Nebula Graph 鸟瞰图](https://s2.loli.net/2022/06/24/UmaxIDyRXSPJ1d9.png)
+
+![UmaxIDyRXSPJ1d9](https://user-images.githubusercontent.com/37174715/191203534-697f039c-4f15-47d4-a644-16de767767af.png)
 
 1. Nebula Importer（简称 Importer）是一款 Nebula Graph 的 CSV 文件单机导入工具。可以读取本地的 CSV 文件，然后导入数据至 Nebula Graph 图数据库中。
 2. Nebula Exchange（简称 Exchange）是一款 Apache Spark™ 应用，用于在分布式环境中将集群中的数据批量迁移到 Nebula Graph 中，能支持多种不同格式的批式数据和流式数据的迁移。其由 Reader、Processor 和 Writer 三部分组成。Reader 读取不同来源的数据返回 DataFrame 后，Processor 遍历 DataFrame 的每一行，根据配置文件中`fields`的映射关系，按列名获取对应的值。在遍历指定批处理的行数后，Writer 会将获取的数据一次性写入到 Nebula Graph 中。
@@ -21,7 +22,8 @@ MySQL由于自身简单、高效、可靠的特点，成为当下使用最广泛
 
 对比常见的开源 CDC 方案，我们可以发现：
 
-![img](https://user-images.githubusercontent.com/37174715/191203200-eecf48a4-9dcb-4df3-a1d9-ac960a8f9290.png)
+![1xtkFULi4SOBd9p](https://user-images.githubusercontent.com/37174715/191203831-c0f75c0b-8cd2-42a4-a747-e9fc88772c18.png)
+
 
 - 对比全量同步能力，基于查询或者日志的 CDC 方案基本都支持，除了 Canal。
 - 而对比全量 + 增量同步的能力，只有 Flink CDC、Debezium、Oracle Goldengate 支持较好。
@@ -35,6 +37,7 @@ MySQL由于自身简单、高效、可靠的特点，成为当下使用最广泛
 # 概要设计
 
 ![Untitled Diagram.drawio-2](https://github.com/ToJ112/nebula-real-time-exchange/blob/main/doc/design.png?raw=true)
+
 
 FlinkCDC通过解析MySQL数据库的Binlog日志捕获变更数据，并通过Reader部分将binlog日志解析为需要处理的DataStream。而后，Processor将根据配置信息将Source数据分库分表进行处理，分流成为Tag和Edge数据，并根据解析数据的不同操作将DataStream分流。最后，Writer部分根据分流结果将流数据通过Nebula Sink对Nebula Graph数据库中的Tag和Edge同步操作。
 
