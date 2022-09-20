@@ -21,9 +21,7 @@ MySQL由于自身简单、高效、可靠的特点，成为当下使用最广泛
 
 对比常见的开源 CDC 方案，我们可以发现：
 
-![img](https://s2.loli.net/2022/06/24/1xtkFULi4SOBd9p.png)
-
-
+![img](https://user-images.githubusercontent.com/37174715/191203200-eecf48a4-9dcb-4df3-a1d9-ac960a8f9290.png)
 
 - 对比全量同步能力，基于查询或者日志的 CDC 方案基本都支持，除了 Canal。
 - 而对比全量 + 增量同步的能力，只有 Flink CDC、Debezium、Oracle Goldengate 支持较好。
