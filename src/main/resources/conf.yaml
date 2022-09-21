@@ -1,0 +1,86 @@
+mysqlSourceInList:
+  - sqlName: mysql_01
+    address: 127.0.0.1
+    port: 3306
+    username: root
+    password: 162331
+nebulaSink:
+  tagList:
+    - sinkName: person_simple
+      graphSpace: flinkSink
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: person
+      idIndex:
+        sqlCol: "id"
+        position: 0
+      fieldList:
+        - name: "name"
+          sqlCol: "name"
+          position: 1
+        - name: "age"
+          sqlCol: "age"
+          position: 2
+  edgeList:
+    - sinkName: friend
+      graphSpace: flinkSink
+      graphAddress: "127.0.0.1:9669"
+      metaAddress: "127.0.0.1:9559"
+      sourceSql: mysql_01
+      sourceDatabase: test
+      sourceTable: friend
+      srcIndex:
+        sqlCol: "srcId"
+        position: 0
+      dstIndex:
+        sqlCol: "dstId"
+        position: 1
+      rankIndex:
+        sqlCol: "ranks"
+        position: 4
+      fieldList:
+        - name: "col1"
+          sqlCol: "col1"
+          position: 2
+        - name: "col2"
+          sqlCol: "col2"
+          position: 3
+        - name: "col3"
+          sqlCol: "ranks"
+          position: 4
+        - name: "col4"
+          sqlCol: "col4"
+          position: 5
+        - name: "col5"
+          sqlCol: "col5"
+          position: 6
+        - name: "col6"
+          sqlCol: "col6"
+          position: 7
+        - name: "col7"
+          sqlCol: "col7"
+          position: 8
+        - name: "col8"
+          sqlCol: "col8"
+          position: 9
+        - name: "col9"
+          sqlCol: "col9"
+          position: 10
+        - name: "col10"
+          sqlCol: "col10"
+          position: 11
+        - name: "col11"
+          sqlCol: "col11"
+          position: 12
+        - name: "col12"
+          sqlCol: "col12"
+          position: 13
+        - name: "col13"
+          sqlCol: "col13"
+          position: 14
+        - name: "col14"
+          sqlCol: "col14"
+          position: 15
+
